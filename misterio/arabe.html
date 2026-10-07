@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>...</title>
+
+    <style>
+        body {
+            margin: 0;
+            background: black;
+            color: red;
+            font-family: Arial, sans-serif;
+
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            min-height: 100vh;
+        }
+
+        .misterio {
+            width: 600px;
+            max-width: 90%;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 28px;
+            margin-bottom: 40px;
+        }
+
+        .acertijo {
+            font-size: 24px;
+            line-height: 1.8;
+            direction: rtl;
+            margin-bottom: 40px;
+        }
+
+        input {
+            background: black;
+            color: red;
+            border: 1px solid red;
+            padding: 12px;
+            font-size: 18px;
+            outline: none;
+            width: 250px;
+            text-align: center;
+        }
+
+        button {
+            display: block;
+            margin: 15px auto;
+            padding: 10px 25px;
+
+            background: black;
+            color: red;
+            border: 1px solid red;
+
+            font-size: 17px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: red;
+            color: black;
+        }
+
+        #mensaje {
+            min-height: 25px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="misterio">
+
+    <h1>لغز</h1>
+
+    <div class="acertijo">
+        ما الشيء الذي له أسنان كثيرة، لكنه لا يعض، ونستخدمه لترتيب الشعر؟
+    </div>
+
+    <input
+        type="text"
+        id="respuesta"
+        placeholder="Respuesta"
+        autocomplete="off"
+    >
+
+    <button onclick="comprobar()">Continuar</button>
+
+    <p id="mensaje"></p>
+
+</div>
+
+
+<script>
+
+function comprobar() {
+
+    const respuesta = document
+        .getElementById("respuesta")
+        .value
+        .trim()
+        .toLowerCase();
+
+    if (respuesta === "peine") {
+
+        window.location.href = "morse.html";
+
+    } else {
+
+        document.getElementById("mensaje").textContent =
+            "Respuesta incorrecta.";
+
+    }
+}
+
+</script>
+
+</body>
+
+</html>

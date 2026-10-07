@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Buscaminas</title>
+
+    <style>
+        body {
+            margin: 0;
+            background: #c0c0c0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .juego {
+            background: #c0c0c0;
+            border-top: 4px solid white;
+            border-left: 4px solid white;
+            border-right: 4px solid #555;
+            border-bottom: 4px solid #555;
+            padding: 15px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-top: 0;
+            font-size: 25px;
+        }
+
+        .marcador {
+            background: black;
+            color: red;
+            font-family: monospace;
+            font-size: 25px;
+            padding: 5px 10px;
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        #tablero {
+            display: grid;
+            grid-template-columns: repeat(10, 30px);
+            grid-template-rows: repeat(10, 30px);
+        }
+
+        .celda {
+            width: 30px;
+            height: 30px;
+            box-sizing: border-box;
+            background: #c0c0c0;
+            border-top: 3px solid white;
+            border-left: 3px solid white;
+            border-right: 3px solid #555;
+            border-bottom: 3px solid #555;
+            font-weight: bold;
+            font-size: 17px;
+            cursor: pointer;
+        }
+
+        .celda.revelada {
+            border: 1px solid #777;
+            cursor: default;
+        }
+
+        .mina {
+            background: red;
+        }
+
+        #mensaje {
+            text-align: center;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        #reiniciar {
+            display: block;
+            margin: 15px auto 0;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="juego">
+
+    <h1>BUSCAMINAS</h1>
+
+    <div class="marcador">
+        <span>💣 <span id="minas">15</span></span>
+        <span>⏱️ <span id="tiempo">0</span></span>
+    </div>
+
+    <div id="tablero"></div>
+
+    <p id="mensaje"></p>
+
+    <button id="reiniciar">Jugar de nuevo</button>
+
+</div>
+
+<script>
+
+const tamaño = 10;
+const cantidadMinas = 15;
+
+let tablero;
+let minas;
+let juegoTerminado;
+let tiempo;
+let intervalo;
+
+const tableroHTML = document.getElementById("tablero");
+const mensaje = document.getElementById("mensaje");
+const tiempoHTML = document.getElementById("tiempo");
+const reiniciar = document.getElementById("reiniciar");
+
+
+function iniciarJuego() {
+
+    clearInterval(intervalo);
+
+    tablero = [];
+    minas = [];
+    juegoTerminado = false;
+    tiempo = 0;
+
+    tableroHTML.innerHTML = "";
+    mensaje.textContent = "";
+    tiempoHTML.textContent = "0";
+
+
+    // Crear tablero
+    for (let fila = 0; fila < tamaño; fila++) {
+
+        tablero[fila] = [];
+
+        for (let columna = 0; columna < tamaño; columna++) {
+
+            tablero[fila][columna] = {
+                mina: false,
+                revelada: false,
+                numero: 0
+            };
+
+        }
+    }
+
+
+    // Colocar minas
+    while (minas.length < cantidadMinas) {
+
+        const fila = Math.floor(Math.random() * tamaño);
+        const columna = Math.floor(Math.random() * tamaño);
+
+        if (!tablero[fila][columna].mina) {
+
+            tablero[fila][columna].mina = true;
+            minas.push([fila, columna]);
+
+        }
+    }
+
+
+    // Calcular números
+    for (let fila = 0; fila < tamaño; fila++) {
+
+        for (let columna = 0; columna < tamaño; columna++) {
+
+            if (tablero[fila][columna].mina) {
+                continue;
+            }
+
+            let contador = 0;
+
+            for (let df = -1; df <= 1; df++) {
+
+                for (let dc = -1; dc <= 1; dc++) {
+
+                    const nuevaFila = fila + df;
+                    const nuevaColumna = columna + dc;
+
+                    if (
+                        nuevaFila >= 0 &&
+                        nuevaFila < tamaño &&
+                        nuevaColumna >= 0 &&
+                        nuevaColumna < tamaño &&
+                        tablero[nuevaFila][nuevaColumna].mina
+                    ) {
+                        contador++;
+                    }
+                }
+            }
+
+            tablero[fila][columna].numero = contador;
+        }
+    }
+
+
+    // Crear botones
+    for (let fila = 0; fila < tamaño; fila++) {
+
+        for (let columna = 0; columna < tamaño; columna++) {
+
+            const boton = document.createElement("button");
+
+            boton.className = "celda";
+
+            boton.addEventListener("click", function() {
+                revelar(fila, columna, boton);
+            });
+
+            tableroHTML.appendChild(boton);
+        }
+    }
+
+
+    // Iniciar cronómetro
+    intervalo = setInterval(function() {
+
+        if (!juegoTerminado) {
+
+            tiempo++;
+            tiempoHTML.textContent = tiempo;
+
+        }
+
+    }, 1000);
+}
+
+
+function revelar(fila, columna, boton) {
+
+    if (juegoTerminado) {
+        return;
+    }
+
+    if (tablero[fila][columna].revelada) {
+        return;
+    }
+
+    tablero[fila][columna].revelada = true;
+
+    boton.classList.add("revelada");
+
+
+    // Mina
+    if (tablero[fila][columna].mina) {
+
+        boton.textContent = "💣";
+        boton.classList.add("mina");
+
+        perder();
+
+        return;
+    }
+
+
+    // Número
+    const numero = tablero[fila][columna].numero;
+
+    if (numero > 0) {
+        boton.textContent = numero;
+    }
+
+
+    comprobarVictoria();
+}
+
+
+function perder() {
+
+    juegoTerminado = true;
+
+    clearInterval(intervalo);
+
+    mensaje.textContent = "💥 PERDISTE";
+
+    const botones = document.querySelectorAll(".celda");
+
+    for (let i = 0; i < minas.length; i++) {
+
+        const fila = minas[i][0];
+        const columna = minas[i][1];
+
+        const indice = fila * tamaño + columna;
+
+        botones[indice].textContent = "💣";
+    }
+}
+
+
+function comprobarVictoria() {
+
+    let reveladas = 0;
+
+    for (let fila = 0; fila < tamaño; fila++) {
+
+        for (let columna = 0; columna < tamaño; columna++) {
+
+            if (tablero[fila][columna].revelada) {
+                reveladas++;
+            }
+        }
+    }
+
+
+    if (reveladas === tamaño * tamaño - cantidadMinas) {
+
+        juegoTerminado = true;
+
+        clearInterval(intervalo);
+
+        mensaje.textContent = "🎉 GANASTE";
+    }
+}
+
+
+reiniciar.addEventListener("click", iniciarJuego);
+
+
+iniciarJuego();
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Tetris</title>
+
+    <style>
+        body {
+            margin: 0;
+            background: #222;
+            color: white;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .juego {
+            text-align: center;
+        }
+
+        h1 {
+            margin-bottom: 10px;
+        }
+
+        .marcador {
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+
+        canvas {
+            background: black;
+            border: 4px solid white;
+            display: block;
+            margin: auto;
+        }
+
+        #mensaje {
+            font-weight: bold;
+            min-height: 24px;
+        }
+
+        #reiniciar {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .controles {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #ccc;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="juego">
+
+    <h1>🧱 TETRIS</h1>
+
+    <div class="marcador">
+        Puntaje: <span id="puntaje">0</span>
+    </div>
+
+    <canvas id="tablero" width="240" height="480"></canvas>
+
+    <p id="mensaje">Usá ← → para moverte y ↑ para girar</p>
+
+    <button id="reiniciar">Jugar de nuevo</button>
+
+    <div class="controles">
+        ↓ Bajar rápido
+    </div>
+
+</div>
+
+<script>
+
+const canvas = document.getElementById("tablero");
+const ctx = canvas.getContext("2d");
+
+const puntajeHTML = document.getElementById("puntaje");
+const mensaje = document.getElementById("mensaje");
+const reiniciar = document.getElementById("reiniciar");
+
+const columnas = 10;
+const filas = 20;
+const tamaño = 24;
+
+let tablero;
+let pieza;
+let juegoTerminado;
+let puntaje;
+let intervalo;
+
+
+const piezas = [
+    [[1, 1, 1, 1]],
+
+    [
+        [1, 1],
+        [1, 1]
+    ],
+
+    [
+        [0, 1, 0],
+        [1, 1, 1]
+    ],
+
+    [
+        [1, 0, 0],
+        [1, 1, 1]
+    ],
+
+    [
+        [0, 0, 1],
+        [1, 1, 1]
+    ],
+
+    [
+        [0, 1, 1],
+        [1, 1, 0]
+    ],
+
+    [
+        [1, 1, 0],
+        [0, 1, 1]
+    ]
+];
+
+
+function iniciarJuego() {
+
+    clearInterval(intervalo);
+
+    tablero = [];
+
+    for (let fila = 0; fila < filas; fila++) {
+
+        tablero[fila] = [];
+
+        for (let columna = 0; columna < columnas; columna++) {
+            tablero[fila][columna] = 0;
+        }
+    }
+
+    puntaje = 0;
+    juegoTerminado = false;
+
+    puntajeHTML.textContent = puntaje;
+    mensaje.textContent = "Usá ← → para moverte y ↑ para girar";
+
+    nuevaPieza();
+    dibujar();
+
+    intervalo = setInterval(bajarPieza, 600);
+}
+
+
+function nuevaPieza() {
+
+    const formas = piezas[Math.floor(Math.random() * piezas.length)];
+
+    pieza = {
+        forma: formas.map(fila => [...fila]),
+        x: Math.floor(columnas / 2) - Math.ceil(formas[0].length / 2),
+        y: 0
+    };
+
+
+    if (colisiona(pieza.x, pieza.y, pieza.forma)) {
+        perder();
+    }
+}
+
+
+function colisiona(x, y, forma) {
+
+    for (let fila = 0; fila < forma.length; fila++) {
+
+        for (let columna = 0; columna < forma[fila].length; columna++) {
+
+            if (!forma[fila][columna]) {
+                continue;
+            }
+
+            const nuevaX = x + columna;
+            const nuevaY = y + fila;
+
+            if (
+                nuevaX < 0 ||
+                nuevaX >= columnas ||
+                nuevaY >= filas
+            ) {
+                return true;
+            }
+
+            if (
+                nuevaY >= 0 &&
+                tablero[nuevaY][nuevaX]
+            ) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+
+function fijarPieza() {
+
+    for (let fila = 0; fila < pieza.forma.length; fila++) {
+
+        for (let columna = 0; columna < pieza.forma[fila].length; columna++) {
+
+            if (pieza.forma[fila][columna]) {
+
+                const x = pieza.x + columna;
+                const y = pieza.y + fila;
+
+                if (y >= 0) {
+                    tablero[y][x] = 1;
+                }
+            }
+        }
+    }
+
+    eliminarLineas();
+    nuevaPieza();
+}
+
+
+function bajarPieza() {
+
+    if (juegoTerminado) {
+        return;
+    }
+
+    if (!colisiona(pieza.x, pieza.y + 1, pieza.forma)) {
+
+        pieza.y++;
+
+    } else {
+
+        fijarPieza();
+
+    }
+
+    dibujar();
+}
+
+
+function eliminarLineas() {
+
+    for (let fila = filas - 1; fila >= 0; fila--) {
+
+        let completa = true;
+
+        for (let columna = 0; columna < columnas; columna++) {
+
+            if (!tablero[fila][columna]) {
+                completa = false;
+                break;
+            }
+        }
+
+
+        if (completa) {
+
+            tablero.splice(fila, 1);
+
+            tablero.unshift(
+                new Array(columnas).fill(0)
+            );
+
+            puntaje += 100;
+
+            puntajeHTML.textContent = puntaje;
+
+            fila++;
+        }
+    }
+}
+
+
+function girarPieza() {
+
+    const forma = pieza.forma;
+
+    const nuevaForma = [];
+
+    for (let columna = 0; columna < forma[0].length; columna++) {
+
+        nuevaForma[columna] = [];
+
+        for (let fila = forma.length - 1; fila >= 0; fila--) {
+
+            nuevaForma[columna].push(
+                forma[fila][columna]
+            );
+        }
+    }
+
+
+    if (!colisiona(pieza.x, pieza.y, nuevaForma)) {
+        pieza.forma = nuevaForma;
+    }
+
+    dibujar();
+}
+
+
+function moverPieza(direccion) {
+
+    if (juegoTerminado) {
+        return;
+    }
+
+    if (!colisiona(
+        pieza.x + direccion,
+        pieza.y,
+        pieza.forma
+    )) {
+
+        pieza.x += direccion;
+    }
+
+    dibujar();
+}
+
+
+function dibujar() {
+
+    ctx.fillStyle = "black";
+    ctx.fillRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+
+    // Tablero
+    for (let fila = 0; fila < filas; fila++) {
+
+        for (let columna = 0; columna < columnas; columna++) {
+
+            if (tablero[fila][columna]) {
+
+                ctx.fillStyle = "cyan";
+
+                ctx.fillRect(
+                    columna * tamaño,
+                    fila * tamaño,
+                    tamaño - 1,
+                    tamaño - 1
+                );
+            }
+        }
+    }
+
+
+    // Pieza actual
+    if (!pieza) {
+        return;
+    }
+
+    ctx.fillStyle = "lime";
+
+    for (let fila = 0; fila < pieza.forma.length; fila++) {
+
+        for (let columna = 0; columna < pieza.forma[fila].length; columna++) {
+
+            if (pieza.forma[fila][columna]) {
+
+                ctx.fillRect(
+                    (pieza.x + columna) * tamaño,
+                    (pieza.y + fila) * tamaño,
+                    tamaño - 1,
+                    tamaño - 1
+                );
+            }
+        }
+    }
+}
+
+
+function perder() {
+
+    juegoTerminado = true;
+
+    clearInterval(intervalo);
+
+    mensaje.textContent =
+        "💀 GAME OVER — Puntaje: " + puntaje;
+}
+
+
+document.addEventListener("keydown", function(event) {
+
+    if (event.key === "ArrowLeft") {
+        moverPieza(-1);
+    }
+
+    if (event.key === "ArrowRight") {
+        moverPieza(1);
+    }
+
+    if (event.key === "ArrowDown") {
+        bajarPieza();
+    }
+
+    if (event.key === "ArrowUp") {
+        girarPieza();
+    }
+
+});
+
+
+reiniciar.addEventListener("click", iniciarJuego);
+
+
+iniciarJuego();
+
+</script>
+
+</body>
+</html>

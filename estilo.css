@@ -1,0 +1,65 @@
+body {
+    margin: 0;
+    background: #eeeeee;
+    color: #222;
+    font-family: Arial, sans-serif;
+}
+
+header {
+    background: #333;
+    color: white;
+    text-align: center;
+    padding: 25px;
+}
+
+header h1 {
+    margin: 0;
+}
+
+main {
+    width: 800px;
+    max-width: 90%;
+    margin: 30px auto;
+}
+
+h2 {
+    border-bottom: 2px solid #333;
+    padding-bottom: 8px;
+}
+
+.juegos {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    margin-bottom: 40px;
+}
+
+.juegos a {
+    background: white;
+    border: 1px solid #ccc;
+    padding: 25px;
+    text-align: center;
+    text-decoration: none;
+    color: #222;
+    font-size: 18px;
+    border-radius: 5px;
+}
+
+.juegos a:hover {
+    background: #ddd;
+}
+
+footer {
+    text-align: center;
+    color: #777;
+    padding: 30px;
+}.misterio {
+    background: black !important;
+    color: red !important;
+    border-color: black !important;
+}
+
+.misterio:hover {
+    background: #111 !important;
+    color: red !important;
+}

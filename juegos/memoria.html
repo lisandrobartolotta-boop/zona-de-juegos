@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Memoria</title>
+
+    <style>
+        body {
+            margin: 0;
+            background: #222;
+            color: white;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .juego {
+            text-align: center;
+        }
+
+        h1 {
+            margin-bottom: 10px;
+        }
+
+        .marcador {
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+
+        #tablero {
+            display: grid;
+            grid-template-columns: repeat(4, 80px);
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .carta {
+            width: 80px;
+            height: 80px;
+            font-size: 35px;
+            cursor: pointer;
+            background: #444;
+            color: white;
+            border: 3px solid #777;
+            border-radius: 8px;
+        }
+
+        .carta:hover {
+            background: #555;
+        }
+
+        .carta.descubierta {
+            background: white;
+            color: black;
+        }
+
+        .carta.completada {
+            background: #4caf50;
+            cursor: default;
+        }
+
+        #mensaje {
+            min-height: 24px;
+            font-weight: bold;
+        }
+
+        #reiniciar {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="juego">
+
+    <h1>🧠 MEMORIA</h1>
+
+    <div class="marcador">
+        Movimientos: <span id="movimientos">0</span>
+    </div>
+
+    <div id="tablero"></div>
+
+    <p id="mensaje">Encontrá todas las parejas</p>
+
+    <button id="reiniciar">Jugar de nuevo</button>
+
+</div>
+
+<script>
+
+const tableroHTML = document.getElementById("tablero");
+const movimientosHTML = document.getElementById("movimientos");
+const mensaje = document.getElementById("mensaje");
+const reiniciar = document.getElementById("reiniciar");
+
+const simbolos = [
+    "🍎", "🍎",
+    "🎮", "🎮",
+    "🚀", "🚀",
+    "👻", "👻",
+    "⭐", "⭐",
+    "🔥", "🔥",
+    "🐱", "🐱",
+    "💀", "💀"
+];
+
+let cartas;
+let primeraCarta;
+let segundaCarta;
+let bloqueado;
+let movimientos;
+let parejas;
+
+
+function mezclar(array) {
+
+    for (let i = array.length - 1; i > 0; i--) {
+
+        const j = Math.floor(Math.random() * (i + 1));
+
+        [array[i], array[j]] =
+        [array[j], array[i]];
+    }
+
+    return array;
+}
+
+
+function iniciarJuego() {
+
+    cartas = mezclar([...simbolos]);
+
+    primeraCarta = null;
+    segundaCarta = null;
+    bloqueado = false;
+
+    movimientos = 0;
+    parejas = 0;
+
+    movimientosHTML.textContent = "0";
+    mensaje.textContent = "Encontrá todas las parejas";
+
+    tableroHTML.innerHTML = "";
+
+
+    for (let i = 0; i < cartas.length; i++) {
+
+        const boton = document.createElement("button");
+
+        boton.className = "carta";
+        boton.textContent = "?";
+
+        boton.addEventListener("click", function() {
+            descubrirCarta(boton, i);
+        });
+
+        tableroHTML.appendChild(boton);
+    }
+}
+
+
+function descubrirCarta(boton, indice) {
+
+    if (bloqueado) {
+        return;
+    }
+
+    if (boton.classList.contains("descubierta")) {
+        return;
+    }
+
+    if (boton.classList.contains("completada")) {
+        return;
+    }
+
+
+    boton.textContent = cartas[indice];
+    boton.classList.add("descubierta");
+
+
+    if (!primeraCarta) {
+
+        primeraCarta = {
+            boton: boton,
+            indice: indice
+        };
+
+        return;
+    }
+
+
+    segundaCarta = {
+        boton: boton,
+        indice: indice
+    };
+
+
+    movimientos++;
+
+    movimientosHTML.textContent = movimientos;
+
+    comprobarPareja();
+}
+
+
+function comprobarPareja() {
+
+    bloqueado = true;
+
+
+    if (
+        cartas[primeraCarta.indice] ===
+        cartas[segundaCarta.indice]
+    ) {
+
+        primeraCarta.boton.classList.add("completada");
+        segundaCarta.boton.classList.add("completada");
+
+        parejas++;
+
+        primeraCarta = null;
+        segundaCarta = null;
+
+        bloqueado = false;
+
+        if (parejas === simbolos.length / 2) {
+
+            mensaje.textContent =
+                "🎉 ¡GANASTE! Movimientos: " + movimientos;
+        }
+
+    } else {
+
+        setTimeout(function() {
+
+            primeraCarta.boton.textContent = "?";
+            segundaCarta.boton.textContent = "?";
+
+            primeraCarta.boton.classList.remove("descubierta");
+            segundaCarta.boton.classList.remove("descubierta");
+
+            primeraCarta = null;
+            segundaCarta = null;
+
+            bloqueado = false;
+
+        }, 800);
+    }
+}
+
+
+reiniciar.addEventListener("click", iniciarJuego);
+
+
+iniciarJuego();
+
+</script>
+
+</body>
+</html>
